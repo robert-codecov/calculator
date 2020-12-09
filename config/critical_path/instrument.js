@@ -38,7 +38,7 @@ module.exports = function(src) {
       ;;
       window.transmit = function() {
         // get the presigned put request
-        var ppreq = 'http://localhost/upload_cpc?package=bash-20200430-d757c17&token=7b9a2130-154e-4bb7-bcfa-f8ded3831686&branch=cpc-endpoint&commit=${sha}&build=&build_url=&name=&tag=&slug=robert-codecov%2Fcodecov-api&service=&flags=&pr=&job=';
+        var ppreq = 'http://localhost/upload_cpc?package=bash-20200430-d757c17&token=6b8b071a-e7c0-44f2-a50d-3b31a5031eb9&branch=master&commit=${sha}&build=&build_url=&name=&tag=&slug=robert-codecov%2Fcodecov-api&service=&flags=&pr=&job=';
         var res = fetch(ppreq, {
           method: 'POST',
           'Content-Type': 'text/plain',
