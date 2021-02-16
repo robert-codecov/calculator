@@ -328,9 +328,8 @@ module.exports = function(webpackEnv) {
           use: {
             loader: require.resolve('./critical_path/instrument.js'),
             options: {
+              // demo opts..to be configured by user.
               ignore: ['/node_modules/'],
-              delay_s: 1000,
-              interval_s: 10000,
             },
           }
         },
