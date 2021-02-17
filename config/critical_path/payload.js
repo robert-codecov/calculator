@@ -83,6 +83,27 @@ const formatLine = (line, state, sources, names) => {
     });
 }
 
+// transforms line numbers & counts to top line numbers
+// input string, output string
+function setTopN(line, n) {
+    const elems = line.split(' ');
+    const asObjects = []; // { line, count}
+    for (var i = 0; i < elems.length; i += 2) {
+        asObjects.push({
+            line: parseInt(elems[i]) - 1,
+            count: elems[i+1],
+        });
+    }
+    asObjects.sort(function(a,b){return b.count - a.count});
+    const res = [];
+    for (var i = 0; i < n; i++) {
+        if (asObjects[i]) {
+            res.push(asObjects[i].line);
+        }
+    }
+    return res.join(' ');
+}
+
 const formatSegment = (col, source, sourceLine, sourceCol, name, sources, names) =>
   `${col + 1} => ${sources[source]} ${sourceLine + 1}:${sourceCol + 1}${names[name] ? ` ${names[name]}` : ``}`
 
@@ -127,16 +148,17 @@ function compress(coverage, root) {
         // * use parsed src map to remap lines
         // * return to format understood by API
         compressed[key] = getOriginalMappings(cpcObject, betterMap);
+
+        // INPUT: 'L1 C1 L2 C2 L3 C3...'
+        // OUTPUT: 'maxN(L1, L2, L3)'
+        compressed[key] = setTopN(compressed[key], 3);
     });
 
     return compressed;
 };
 
 window.transmit = function(host, token, commit, root) {
-    // const smallmap = compress(__coverage__, root);
-    const smallmap = {
-        'src/index.js': '2 3 4',
-    };
+    const smallmap = compress(__coverage__, root);
 
 	const ppreq = `${host}/critical_path/?package=bash-20200430-d757c17&token=${token}&branch=master&commit=${commit}`;
     
@@ -152,15 +174,17 @@ window.transmit = function(host, token, commit, root) {
         })
       .then(function(signedput) {
         // Create a file object from coverage json
-        const cov = JSON.stringify(smallmap);
-        const blob = new Blob([cov], {type: "application/json"});
+        const lines = Object.keys(smallmap).map(fn => {
+            return `${fn} ${smallmap[fn]}`;
+        });
+
+        console.log(lines);
+        
+        const blob = new Blob([lines.join('\n')], {type: "text/plain"});
         const f = new File([blob], "x.json");
         
         return fetch(signedput, {
           method: 'PUT',
-          'Content-Type': 'application/x-gzip',
-          'Content-Encoding': 'gzip',
-          'x-amz-acl': 'public-read',
           body: f,
         })
       });
